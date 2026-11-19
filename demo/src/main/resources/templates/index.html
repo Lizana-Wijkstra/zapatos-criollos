@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html xmlns:th="http://thymeleaf.org" lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Zapatos Criollos - Sistema de Nómina</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f6f9; }
+        .container { max-width: 1000px; margin: auto; }
+        .card { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        input, select, button { width: 100%; padding: 8px; margin: 6px 0 12px 0; box-sizing: border-box; }
+        button { background-color: #0056b3; color: white; border: none; cursor: pointer; font-weight: bold; }
+        button:hover { background-color: #004494; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #0056b3; color: white; }
+        .cheque-box { border: 2px dashed #28a745; background: #e9f7ef; padding: 20px; border-radius: 8px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>👟 Empresa Zapatos Criollos - Gestión de Cheques</h1>
+
+    <!-- PANTALLA DE CAPTURA DE DATOS -->
+    <div class="grid">
+        <div class="card">
+            <h3>1. Registro de Empleado</h3>
+            <form action="/guardar-empleado" method="post">
+                <label>Número de Empleado:</label>
+                <input type="text" name="numeroEmpleado" placeholder="Ej: EMP-01" required>
+                
+                <label>Nombre Completo:</label>
+                <input type="text" name="nombre" required>
+                
+                <label>Dirección:</label>
+                <input type="text" name="direccion" required>
+                
+                <label>Tasa de Pago por Hora (RD$):</label>
+                <input type="number" step="0.01" name="tasaPago" required>
+                
+                <button type="submit">Guardar Empleado</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <h3>2. Archivo de Tiempo (Horas Trabajadas)</h3>
+            <form action="/registrar-tiempo" method="post">
+                <label>Seleccionar Empleado:</label>
+                <select name="numeroEmpleado" required>
+                    <option value="">-- Seleccione --</option>
+                    <option th:each="emp : ${empleados}" 
+                            th:value="${emp.numeroEmpleado}" 
+                            th:text="${emp.numeroEmpleado + ' - ' + emp.nombre}"></option>
+                </select>
+                
+                <label>Horas Trabajadas:</label>
+                <input type="number" step="0.5" name="horasTrabajadas" required>
+                
+                <button type="submit">Procesar Tiempo y Calcular Pago</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- CHEQUE GENERADO -->
+    <div class="card cheque-box" th:if="${cheque != null}">
+        <h2>🧾 CHEQUE DE PAGO - ZAPATOS CRIOLLOS</h2>
+        <p><strong>Número de Empleado:</strong> <span th:text="${cheque.numeroEmpleado}"></span></p>
+        <p><strong>Nombre de Empleado:</strong> <span th:text="${cheque.nombre}"></span></p>
+        <p><strong>Dirección:</strong> <span th:text="${cheque.direccion}"></span></p>
+        <hr>
+        <p><strong>Pago Bruto (Información de Pago):</strong> RD$ <span th:text="${#numbers.formatDecimal(cheque.informacionPago, 1, 2)}"></span></p>
+        <h3><strong>Cantidad de Pago Actual (Neto a Pagar):</strong> RD$ <span th:text="${#numbers.formatDecimal(cheque.informacionPagoActual, 1, 2)}"></span></h3>
+    </div>
+
+    <!-- PANTALLA DE DESPLIEGUE DE INFORMACIÓN -->
+    <div class="card">
+        <h3>📋 Registro Maestro de Empleados</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>N° Empleado</th>
+                    <th>Nombre</th>
+                    <th>Dirección</th>
+                    <th>Tasa/Hora</th>
+                    <th>Pago Bruto</th>
+                    <th>Pago Actual (Neto)</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="emp : ${empleados}">
+                    <td th:text="${emp.numeroEmpleado}"></td>
+                    <td th:text="${emp.nombre}"></td>
+                    <td th:text="${emp.direccion}"></td>
+                    <td th:text="${emp.tasaPago}"></td>
+                    <td th:text="${#numbers.formatDecimal(emp.informacionPago, 1, 2)}"></td>
+                    <td th:text="${#numbers.formatDecimal(emp.informacionPagoActual, 1, 2)}"></td>
+                    <td><a th:href="@{'/cheque/' + ${emp.numeroEmpleado}}">Imprimir Cheque</a></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+</body>
+</html>
