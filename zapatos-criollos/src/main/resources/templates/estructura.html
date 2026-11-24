@@ -1,0 +1,154 @@
+<!--
+Nombre Autor: Lizana Alicia Wijkstra Santana 
+Matricula: 100702949
+Asignatura: INF514
+Sección: Z07
+Fecha realizado: 23/11/2026
+Hora realizado: 5:10 pm 
+Profesor: Julio Castro Ortiz
+-->
+
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Zapatos Criollos - Cheque de pago</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 700px; margin: 0 auto; padding: 20px; background: #f4f4f4; color: #222; }
+    h1 { text-align: center; color: #7a3e12; }
+    nav { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-bottom: 20px; }
+    button { background: #7a3e12; color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-size: 15px; }
+    button:hover { background: #5a2d0d; }
+    .pantalla { display: none; background: white; padding: 20px; border-radius: 8px; }
+    .pantalla.activa { display: block; }
+    label { display: block; margin-top: 10px; font-weight: bold; }
+    input, select { width: 100%; padding: 8px; margin-top: 4px; box-sizing: border-box; }
+    .mensaje { margin-top: 12px; font-weight: bold; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background: #eee; }
+    .cheque { border: 2px solid #333; padding: 16px; margin-top: 16px; }
+    .cheque p { margin: 6px 0; }
+    .neto { font-size: 20px; font-weight: bold; }
+  </style>
+</head>
+<body>
+
+  <h1>Zapatos Criollos</h1>
+
+  <!-- Menú -->
+  <nav>
+    <button type="button" onclick="mostrar('principal')">Inicio</button>
+    <button type="button" onclick="mostrar('captura')">Captura de datos</button>
+    <button type="button" onclick="mostrar('lista')">Lista de empleados</button>
+    <button type="button" onclick="mostrar('cheque')">Ver cheque</button>
+  </nav>
+
+  <!-- Pantalla principal -->
+  <div id="principal" class="pantalla activa"
+       th:class="${pantalla == 'principal'} ? 'pantalla activa' : 'pantalla'">
+    <h2>Sistema de cheques de pago</h2>
+    <p>Con este sistema puedes:</p>
+    <ul>
+      <li>Registrar empleados y sus horas trabajadas.</li>
+      <li>Ver la lista de empleados.</li>
+      <li>Generar el cheque de pago de un empleado.</li>
+    </ul>
+  </div>
+
+  <!-- Pantalla de captura de datos -->
+  <div id="captura" class="pantalla"
+       th:class="${pantalla == 'captura'} ? 'pantalla activa' : 'pantalla'">
+    <h2>Registrar empleado</h2>
+    <form action="/guardar-empleado" method="post">
+      <label for="numero">Número de empleado</label>
+      <input type="text" id="numero" name="numeroEmpleado" required>
+      <label for="nombre">Nombre</label>
+      <input type="text" id="nombre" name="nombre" required>
+      <label for="direccion">Dirección</label>
+      <input type="text" id="direccion" name="direccion" required>
+      <label for="tasa">Tasa de pago por hora (RD$)</label>
+      <input type="number" id="tasa" name="tasaPago" min="0" step="any" required>
+      <br><br>
+      <button type="submit">Guardar empleado</button>
+    </form>
+    <div class="mensaje" th:if="${mensajeEmpleado != null}" th:text="${mensajeEmpleado}"></div>
+
+    <hr>
+
+    <h2>Registrar horas trabajadas</h2>
+    <form action="/registrar-tiempo" method="post">
+      <label for="numeroHoras">Empleado</label>
+      <select id="numeroHoras" name="numeroEmpleado" required>
+        <option value="">-- Seleccione --</option>
+        <option th:each="emp : ${empleados}"
+                th:value="${emp.numero}"
+                th:text="${emp.numero + ' - ' + emp.personal.nombre}"></option>
+      </select>
+      <label for="horas">Horas trabajadas</label>
+      <input type="number" id="horas" name="horasTrabajadas" min="0" step="any" required>
+      <br><br>
+      <button type="submit">Guardar horas</button>
+    </form>
+    <div class="mensaje" th:if="${mensajeHoras != null}" th:text="${mensajeHoras}"></div>
+  </div>
+
+  <!-- Pantalla de despliegue de información -->
+  <div id="lista" class="pantalla"
+       th:class="${pantalla == 'lista'} ? 'pantalla activa' : 'pantalla'">
+    <h2>Lista de empleados</h2>
+    <table>
+      <thead>
+        <tr><th>Número</th><th>Nombre</th><th>Dirección</th><th>Tasa por hora</th></tr>
+      </thead>
+      <tbody>
+        <tr th:each="emp : ${empleados}">
+          <td th:text="${emp.numero}"></td>
+          <td th:text="${emp.personal.nombre}"></td>
+          <td th:text="${emp.personal.direccion}"></td>
+          <td th:text="${'RD$ ' + #numbers.formatDecimal(emp.pago.tasaPago, 1, 'COMMA', 2, 'POINT')}"></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Cheque de pago -->
+  <div id="cheque" class="pantalla"
+       th:class="${pantalla == 'cheque'} ? 'pantalla activa' : 'pantalla'">
+    <h2>Cheque de pago</h2>
+    <form action="/cheque" method="get">
+      <label for="numeroCheque">Número de empleado</label>
+      <input type="text" id="numeroCheque" name="numero" required>
+      <br><br>
+      <button type="submit">Generar cheque</button>
+    </form>
+    <div class="mensaje" th:if="${mensajeCheque != null}" th:text="${mensajeCheque}"></div>
+
+    <div class="cheque" th:if="${cheque != null}">
+      <p><b>Zapatos Criollos</b></p>
+      <p>Fecha: <span th:text="${fecha}"></span></p>
+      <p>Número de empleado: <span th:text="${cheque.numeroEmpleado}"></span></p>
+      <p>Nombre: <span th:text="${cheque.nombre}"></span></p>
+      <p>Dirección: <span th:text="${cheque.direccion}"></span></p>
+      <hr>
+      <p>Pago bruto: RD$ <span th:text="${#numbers.formatDecimal(cheque.pagoActual.pagoBruto, 1, 'COMMA', 2, 'POINT')}"></span></p>
+      <p>Impuesto sobre la renta: RD$ <span th:text="${#numbers.formatDecimal(cheque.pagoActual.impuestoRenta, 1, 'COMMA', 2, 'POINT')}"></span></p>
+      <p>Seguro médico: RD$ <span th:text="${#numbers.formatDecimal(cheque.pagoActual.seguroMedico, 1, 'COMMA', 2, 'POINT')}"></span></p>
+      <p class="neto">Pago actual (neto): RD$ <span th:text="${#numbers.formatDecimal(cheque.pagoActual.pagoNeto, 1, 'COMMA', 2, 'POINT')}"></span></p>
+    </div>
+  </div>
+
+  <script>
+    // Muestra una pantalla y esconde las demás
+    function mostrar(id) {
+      var pantallas = document.getElementsByClassName("pantalla");
+      for (var i = 0; i < pantallas.length; i++) {
+        pantallas[i].classList.remove("activa");
+      }
+      document.getElementById(id).classList.add("activa");
+    }
+  </script>
+
+</body>
+</html>
