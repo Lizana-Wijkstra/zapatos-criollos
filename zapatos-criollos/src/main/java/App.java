@@ -26,9 +26,13 @@ public class App {
         String puertoRender = System.getenv("PORT");
 
         if (puertoRender != null) {
-            // En Render: sin MySQL, los datos se guardan en memoria
+            // En Render: usa Neon si está configurada DB_URL, o memoria como respaldo
             puerto = Integer.parseInt(puertoRender);
-            nomina = new NominaMemoria();
+            if (System.getenv("DB_URL") != null) {
+                nomina = new NominaNeon();
+            } else {
+                nomina = new NominaMemoria();
+            }
         } else {
             // En tu computadora: usa MySQL y pide la contraseña (no queda escrita en el código)
             System.out.print("Escribe la contraseña de MySQL y presiona Enter: ");
@@ -78,7 +82,7 @@ public class App {
                     if (guardado) {
                         mensaje = "Empleado guardado.";
                     } else {
-                        mensaje = "No se pudo guardar. Revisa la conexión con MySQL.";
+                        mensaje = "No se pudo guardar. Revisa la conexión con la base de datos.";
                     }
                 } catch (NumberFormatException e) {
                     mensaje = "La tasa de pago no es un número válido.";
